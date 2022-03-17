@@ -1,6 +1,6 @@
 {{/* Generate common affinity */}}
 
-{{- define "common.affinities.nodes.soft" -}}
+{{- define "common.affinities.nodes.soft" }}
 preferredDuringSchedulingIgnoredDuringExecution:
   - preference:
       matchExpressions:
@@ -13,7 +13,7 @@ preferredDuringSchedulingIgnoredDuringExecution:
     weight: 1
 {{- end -}}
 
-{{- define "common.affinities.nodes.hard" -}}
+{{- define "common.affinities.nodes.hard" }}
 requiredDuringSchedulingIgnoredDuringExecution:
   nodeSelectorTerms:
     - matchExpressions:
