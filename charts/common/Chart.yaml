@@ -1,0 +1,9 @@
+name: common
+apiVersion: v2
+home: https://github.com/drycc/common
+description: Drycc Common
+maintainers:
+- name: Team Drycc
+  email: team@drycc.cc
+type: library
+version: v1.0.0
