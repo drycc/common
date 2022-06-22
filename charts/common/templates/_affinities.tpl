@@ -25,6 +25,18 @@ requiredDuringSchedulingIgnoredDuringExecution:
             {{- end }}
 {{- end -}}
 
+{{/*
+Return a nodeAffinity definition
+{{ include "common.affinities.nodes" (dict "type" "soft" "key" "FOO" "values" (list "BAR" "BAZ")) -}}
+*/}}
+{{- define "common.affinities.nodes" -}}
+  {{- if eq .type "soft" }}
+    {{- include "common.affinities.nodes.soft" . -}}
+  {{- else if eq .type "hard" }}
+    {{- include "common.affinities.nodes.hard" . -}}
+  {{- end -}}
+{{- end -}}
+
 {{- define "common.affinities.pods.soft" }}
 affinity:
   podAntiAffinity:
@@ -80,3 +92,15 @@ affinity:
             {{- end }}
         topologyKey: kubernetes.io/hostname
 {{- end }}
+
+{{/*
+Return a podAffinity/podAntiAffinity definition
+{{ include "common.affinities.pods" (dict "type" "soft" "key" "FOO" "values" (list "BAR" "BAZ")) -}}
+*/}}
+{{- define "common.affinities.pods" -}}
+  {{- if eq .type "soft" }}
+    {{- include "common.affinities.pods.soft" . -}}
+  {{- else if eq .type "hard" }}
+    {{- include "common.affinities.pods.hard" . -}}
+  {{- end -}}
+{{- end -}}
