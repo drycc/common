@@ -5,15 +5,16 @@ name: chart
 steps:
 - name: generate chart
   commands:
-  - helm package charts/common --version ${DRONE_TAG:-v1.0.0}
-  - curl -u $CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD -F chart=@common-${DRONE_TAG:-v1.0.0}.tgz "$CHARTMUSEUM_API/api/$([ -z $DRONE_TAG ] && echo testing || echo stable)/charts"
+  - helm package charts/common --version $([ -z $DRONE_TAG ] && echo 1.0.0 || echo ${DRONE_TAG#v})
+  - echo $CONTAINER_PASSWORD | helm registry login $DRYCC_REGISTRY -u $CONTAINER_USERNAME --password-stdin
+  - helm push common-$([ -z $DRONE_TAG ] && echo 1.0.0 || echo ${DRONE_TAG#v}).tgz oci://$DRYCC_REGISTRY/$([ -z $DRONE_TAG ] && echo charts-testing || echo charts)
   environment:
-    CHARTMUSEUM_USERNAME:
-      from_secret: chartmuseum_username
-    CHARTMUSEUM_PASSWORD:
-      from_secret: chartmuseum_password
-    CHARTMUSEUM_API:
-      from_secret: chartmuseum_api
+    DRYCC_REGISTRY:
+      from_secret: drycc_registry
+    CONTAINER_USERNAME:
+      from_secret: container_username
+    CONTAINER_PASSWORD:
+      from_secret: container_password
   when:
     event:
     - push
