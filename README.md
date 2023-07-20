@@ -1,6 +1,6 @@
 # Drycc Common Library Chart
 
-A [Helm Library Chart](https://helm.sh/docs/topics/library_charts/#helm) for grouping common logic between drycc charts.
+Drycc Common Library Chart has been forked from [bitnami](https://github.com/bitnami/charts), for grouping common logic between drycc charts.
 
 ## Prerequisites
 

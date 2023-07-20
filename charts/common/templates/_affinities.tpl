@@ -1,6 +1,15 @@
-{{/* Generate common affinity */}}
+{{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
 
-{{- define "common.affinities.nodes.soft" }}
+{{/* vim: set filetype=mustache: */}}
+
+{{/*
+Return a soft nodeAffinity definition
+{{ include "common.affinities.nodes.soft" (dict "key" "FOO" "values" (list "BAR" "BAZ")) -}}
+*/}}
+{{- define "common.affinities.nodes.soft" -}}
 preferredDuringSchedulingIgnoredDuringExecution:
   - preference:
       matchExpressions:
@@ -13,7 +22,11 @@ preferredDuringSchedulingIgnoredDuringExecution:
     weight: 1
 {{- end -}}
 
-{{- define "common.affinities.nodes.hard" }}
+{{/*
+Return a hard nodeAffinity definition
+{{ include "common.affinities.nodes.hard" (dict "key" "FOO" "values" (list "BAR" "BAZ")) -}}
+*/}}
+{{- define "common.affinities.nodes.hard" -}}
 requiredDuringSchedulingIgnoredDuringExecution:
   nodeSelectorTerms:
     - matchExpressions:
@@ -37,57 +50,53 @@ Return a nodeAffinity definition
   {{- end -}}
 {{- end -}}
 
-{{- define "common.affinities.pods.soft" }}
-preferredDuringSchedulingIgnoredDuringExecution:
-- weight: 2
-  podAffinityTerm:
-    labelSelector:
-      matchExpressions:
-      - key: {{ .key }}
-        operator: In
-        values:
-        {{- range .values }}
-        - {{ . | quote }}
-        {{- end }}
-    topologyKey: topology.kubernetes.io/zone
-- weight: 1
-  podAffinityTerm:
-    labelSelector:
-      matchExpressions:
-      - key: {{ .key }}
-        operator: In
-        values:
-        {{- range .values }}
-        - {{ . | quote }}
-        {{- end }}
-    topologyKey: kubernetes.io/hostname
-{{- end }}
+{{/*
+Return a topologyKey definition
+{{ include "common.affinities.topologyKey" (dict "topologyKey" "BAR") -}}
+*/}}
+{{- define "common.affinities.topologyKey" -}}
+{{ .topologyKey | default "kubernetes.io/hostname" -}}
+{{- end -}}
 
-{{- define "common.affinities.pods.hard" }}
+{{/*
+Return a soft podAffinity/podAntiAffinity definition
+{{ include "common.affinities.pods.soft" (dict "component" "FOO" "extraMatchLabels" .Values.extraMatchLabels "topologyKey" "BAR" "context" $) -}}
+*/}}
+{{- define "common.affinities.pods.soft" -}}
+{{- $component := default "" .component -}}
+{{- $extraMatchLabels := default (dict) .extraMatchLabels -}}
+preferredDuringSchedulingIgnoredDuringExecution:
+  - podAffinityTerm:
+      labelSelector:
+        matchLabels: {{- (include "common.labels.matchLabels" .context) | nindent 10 }}
+          {{- if not (empty $component) }}
+          {{ printf "app.kubernetes.io/component: %s" $component }}
+          {{- end }}
+          {{- range $key, $value := $extraMatchLabels }}
+          {{ $key }}: {{ $value | quote }}
+          {{- end }}
+      topologyKey: {{ include "common.affinities.topologyKey" (dict "topologyKey" .topologyKey) }}
+    weight: 1
+{{- end -}}
+
+{{/*
+Return a hard podAffinity/podAntiAffinity definition
+{{ include "common.affinities.pods.hard" (dict "component" "FOO" "extraMatchLabels" .Values.extraMatchLabels "topologyKey" "BAR" "context" $) -}}
+*/}}
+{{- define "common.affinities.pods.hard" -}}
+{{- $component := default "" .component -}}
+{{- $extraMatchLabels := default (dict) .extraMatchLabels -}}
 requiredDuringSchedulingIgnoredDuringExecution:
-- weight: 2
-  podAffinityTerm:
-    labelSelector:
-      matchExpressions:
-      - key: {{ .key }}
-        operator: In
-        values:
-        {{- range .values }}
-        - {{ . | quote }}
+  - labelSelector:
+      matchLabels: {{- (include "common.labels.matchLabels" .context) | nindent 8 }}
+        {{- if not (empty $component) }}
+        {{ printf "app.kubernetes.io/component: %s" $component }}
         {{- end }}
-    topologyKey: topology.kubernetes.io/zone
-- weight: 1
-  podAffinityTerm:
-    labelSelector:
-      matchExpressions:
-      - key: {{ .key }}
-        operator: In
-        values:
-        {{- range .values }}
-        - {{ . | quote }}
+        {{- range $key, $value := $extraMatchLabels }}
+        {{ $key }}: {{ $value | quote }}
         {{- end }}
-    topologyKey: kubernetes.io/hostname
-{{- end }}
+    topologyKey: {{ include "common.affinities.topologyKey" (dict "topologyKey" .topologyKey) }}
+{{- end -}}
 
 {{/*
 Return a podAffinity/podAntiAffinity definition
